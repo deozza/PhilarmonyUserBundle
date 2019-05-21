@@ -16,7 +16,7 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 /**
  * User controller.
  *
- * @Route("api/user")
+ * @Route("api/")
  */
 class UserController extends AbstractController
 {
@@ -27,7 +27,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("s", name="get_users", methods={"GET"})
+     * @Route("users", name="get_users", methods={"GET"})
      */
     public function getUsersAction(Request $request, UserRepository $userRepository)
     {
@@ -47,7 +47,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("/current", name="get_current_user", methods={"GET"})
+     * @Route("user/current", name="get_current_user", methods={"GET"})
      */
     public function getCurrentUserAction(Request $request)
     {
@@ -55,7 +55,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("/{id}", name="get_specific_user", methods={"GET"})
+     * @Route("user/{id}", name="get_specific_user", methods={"GET"})
      */
     public function getSpecificUserAction(Request $request, UserRepository $userRepository, $id)
     {
@@ -71,7 +71,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("s", name="post_users", methods={"POST"})
+     * @Route("users", name="post_users", methods={"POST"})
      */
     public function postUsersAction(Request $request, UserPasswordEncoderInterface $encoder)
     {
@@ -105,7 +105,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("/current", name="patch_current_user", methods={"PATCH"})
+     * @Route("user/current", name="patch_current_user", methods={"PATCH"})
      */
     public function patchCurrentAction(Request $request, UserPasswordEncoderInterface $encoder)
     {
@@ -134,7 +134,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("/{id}", name="patch_specific_user", methods={"PATCH"})
+     * @Route("user/{id}", name="patch_specific_user", methods={"PATCH"})
      */
     public function patchSpecificUserAction(Request $request, UserPasswordEncoderInterface $encoder, $id)
     {

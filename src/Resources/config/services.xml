@@ -11,7 +11,9 @@
         <service id="Deozza\PhilarmonyUserBundle\Security\ApiKeyAuthenticator" alias="philarmony.authenticator" />
 
         <service class="Deozza\PhilarmonyUserBundle\Security\ApiKeyUserProvider" id="philarmony.user_provider">
+            <bind key="$userRepository" type="service" id="Deozza\PhilarmonyUserBundle\Repository\UserRepository"/>
         </service>
         <service id="Deozza\PhilarmonyUserBundle\Security\ApiKeyUserProvider" alias="philarmony.user_provider" />
+
     </services>
 </container>

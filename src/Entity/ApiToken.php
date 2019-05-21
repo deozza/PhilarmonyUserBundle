@@ -29,18 +29,12 @@ class ApiToken
      */
     private $user;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     * @JMS\Exclude
-     */
-    private $kind;
 
 
-    public function __construct(User $user, $token, string $kind)
+    public function __construct(User $user, $token)
     {
         $this->user = $user;
         $this->token = $token;
-        $this->kind = $kind;
     }
     public function getId(): ?int
     {
@@ -55,10 +49,5 @@ class ApiToken
     public function getUser(): ?User
     {
         return $this->user;
-    }
-
-    public function getKind(): ?string
-    {
-        return $this->kind;
     }
 }
