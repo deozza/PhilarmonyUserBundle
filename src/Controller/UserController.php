@@ -1,20 +1,16 @@
 <?php
-namespace Deozza\PhilarmonyUserBundle\User\Controller;
+namespace Deozza\PhilarmonyUserBundle\Controller;
 
-use Deozza\PhilarmonyUserBundle\User\Entity\Registration;
-use Deozza\PhilarmonyUserBundle\User\Entity\User;
-use Deozza\PhilarmonyUserBundle\User\Form\PatchCurrentUserType;
-use Deozza\PhilarmonyUserBundle\User\Form\PatchUserType;
-use Deozza\PhilarmonyUserBundle\User\Form\RegistrationType;
-use Deozza\PhilarmonyUserBundle\User\Repository\UserRepository;
-use Deozza\PhilarmonyApiBundle\Service\ProcessForm;
-use Knp\Component\Pager\PaginatorInterface;
+use Deozza\PhilarmonyUserBundle\Entity\Registration;
+use Deozza\PhilarmonyUserBundle\Entity\User;
+use Deozza\PhilarmonyUserBundle\Form\PatchCurrentUserType;
+use Deozza\PhilarmonyUserBundle\Form\PatchUserType;
+use Deozza\PhilarmonyUserBundle\Form\RegistrationType;
+use Deozza\PhilarmonyUserBundle\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
-use Deozza\PhilarmonyBundle\Service\FormManager\FormErrorSerializer;
-use Deozza\PhilarmonyBundle\Service\ResponseMaker;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 /**
@@ -25,12 +21,9 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 class UserController extends AbstractController
 {
 
-    public function __construct(ResponseMaker $responseMaker, EntityManagerInterface $entityManager, ProcessForm $processForm, PaginatorInterface $paginator)
+    public function __construct(EntityManagerInterface $entityManager)
     {
         $this->em = $entityManager;
-        $this->response = $responseMaker;
-        $this->processForm = $processForm;
-        $this->paginator = $paginator;
     }
 
     /**

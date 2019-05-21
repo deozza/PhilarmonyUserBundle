@@ -5,6 +5,13 @@
         http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <services>
+        <service class="Deozza\PhilarmonyUserBundle\Security\ApiKeyAuthenticator" id="philarmony.authenticator">
+            <bind key="$em" type="service" id="doctrine.orm.entity_manager"/>
+        </service>
+        <service id="Deozza\PhilarmonyUserBundle\Security\ApiKeyAuthenticator" alias="philarmony.authenticator" />
 
+        <service class="Deozza\PhilarmonyUserBundle\Security\ApiKeyUserProvider" id="philarmony.user_provider">
+        </service>
+        <service id="Deozza\PhilarmonyUserBundle\Security\ApiKeyUserProvider" alias="philarmony.user_provider" />
     </services>
 </container>

@@ -1,5 +1,5 @@
 {
-    "name": "edenn/philarmony-user-bundle",
+    "name": "deozza/philarmony-user-bundle",
     "description": "An user implementation adapted to Philarmony",
     "type": "symfony-bundle",
     "license": "MIT",
@@ -37,12 +37,6 @@
     "autoload-dev": {
         "psr-4": {
             "Deozza\\PhilarmonyUserBundle\\Tests\\": "tests/"
-        }
-    },
-    "scripts": {
-        "auto-scripts": {
-            "cache:clear": "symfony-cmd",
-            "assets:install %PUBLIC_DIR%": "symfony-cmd"
         }
     }
 }

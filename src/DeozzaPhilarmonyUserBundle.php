@@ -1,6 +1,6 @@
 <?php
 
-namespace Deozza\PhilarmonyBundle;
+namespace Deozza\PhilarmonyUserBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
