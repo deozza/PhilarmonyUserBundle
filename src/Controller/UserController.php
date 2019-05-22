@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Knp\Component\Pager\PaginatorInterface;
+use Deozza\PhilarmonyBundle\Service\ResponseMaker;
+use Deozza\PhilarmonyBundle\Service\FormManager\FormErrorSerializer;
 
 /**
  * User controller.
@@ -21,9 +24,12 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 class UserController extends AbstractController
 {
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(ResponseMaker $responseMaker, EntityManagerInterface $entityManager, PaginatorInterface $paginator, FormErrorSerializer $serializer)
     {
         $this->em = $entityManager;
+        $this->paginator = $paginator;
+        $this->response = $responseMaker;
+        $this->serializer = $serializer;
     }
 
     /**
@@ -33,7 +39,7 @@ class UserController extends AbstractController
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'Forbidden access');
 
-        $filters = $request->query->get("filter", []);
+        $filters = $request->query->get("filterBy", []);
 
         $usersQuery = $userRepository->findAllFiltered($filters);
 
@@ -49,7 +55,7 @@ class UserController extends AbstractController
     /**
      * @Route("user/current", name="get_current_user", methods={"GET"})
      */
-    public function getCurrentUserAction(Request $request)
+    public function getCurrentUserAction()
     {
         return $this->response->ok($this->getUser(), ['user_basic']);
     }
@@ -57,7 +63,7 @@ class UserController extends AbstractController
     /**
      * @Route("user/{id}", name="get_specific_user", methods={"GET"})
      */
-    public function getSpecificUserAction(Request $request, UserRepository $userRepository, $id)
+    public function getSpecificUserAction(UserRepository $userRepository, $id)
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'Forbidden access');
 
@@ -76,32 +82,32 @@ class UserController extends AbstractController
     public function postUsersAction(Request $request, UserPasswordEncoderInterface $encoder)
     {
         $registration = new Registration();
-        $registrationType = new \ReflectionClass(RegistrationType::class);
-        $registered = $this->processForm->process($request, $registrationType->getName(), $registration);
+        $form = $this->createForm(RegistrationType::class, $registration);
+        $postedRegistration = json_decode($request->getContent(), true);
 
-        if(!is_a($registered, Registration::class))
+        $form->submit($postedRegistration);
+        if(!$form->isValid())
         {
-            return $registered;
+            return $this->response->badRequest($this->serializer->convertFormToArray($form));
         }
 
-        $userAlreadyExist = $this->em->getRepository(User::class)->findByUsernameOrEmail($registered->getLogin(), $registered->getEmail());
+        $userAlreadyExist = $this->em->getRepository(User::class)->findByUsernameOrEmail($registration->getLogin(), $registration->getEmail());
 
         if ($userAlreadyExist) {
             return $this->response->badRequest("User already exists. Chose another email and another login");
         }
 
         $user = new User();
-        $user->setUsername($registered->getLogin());
-        $user->setEmail($registered->getEmail());
+        $user->setUsername($registration->getLogin());
+        $user->setEmail($registration->getEmail());
 
-        $password = $encoder->encodePassword($user, $registered->getPassword());
+        $password = $encoder->encodePassword($user, $registration->getPassword());
         $user->setPassword($password);
         $user->setRegisterDate(new \DateTime('now'));
 
         $this->em->persist($user);
 
         return $this->response->created($user, ['user_basic']);
-
     }
 
     /**

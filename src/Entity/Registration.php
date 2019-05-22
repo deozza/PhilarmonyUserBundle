@@ -1,5 +1,5 @@
 <?php
-namespace Deozza\PhilarmonyUserBundle\User\Entity;
+namespace Deozza\PhilarmonyUserBundle\Entity;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -31,34 +31,11 @@ class Registration
      */
     private $password;
 
-    /**
-     * @var boolean
-     *
-     * @Assert\NotBlank()
-     * @Assert\Type("boolean")
-     */
-    private $acceptCGU;
-
-    /**
-     * @var boolean
-     *
-     * @Assert\Type("boolean")
-     */
-    private $acceptNewsletter;
-
-
-
-    /**
-     * @return string
-     */
     public function getLogin(): ?string
     {
         return $this->login;
     }
 
-    /**
-     * @param string $login
-     */
     public function setLogin(string $login): self
     {
         $this->login = $login;
@@ -66,34 +43,22 @@ class Registration
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getEmail(): ?string
     {
         return $this->email;
     }
 
-    /**
-     * @param string $email
-     */
     public function setEmail(string $email): self
     {
         $this->email = $email;
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getPassword(): ?string
     {
         return $this->password;
     }
 
-    /**
-     * @param string $password
-     */
     public function setPassword(string $password): self
     {
         $this->password = $password;
@@ -101,38 +66,5 @@ class Registration
         return $this;
     }
 
-    /**
-     * @return bool
-     */
-    public function isAcceptCGU(): ?bool
-    {
-        return $this->acceptCGU;
-    }
-
-    /**
-     * @param bool $acceptCGU
-     */
-    public function setAcceptCGU(bool $acceptCGU): self
-    {
-        $this->acceptCGU = $acceptCGU;
-        return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isAcceptNewsletter(): ?bool
-    {
-        return $this->acceptNewsletter;
-    }
-
-    /**
-     * @param bool $acceptNewsletter
-     */
-    public function setAcceptNewsletter(bool $acceptNewsletter): self
-    {
-        $this->acceptNewsletter = $acceptNewsletter;
-        return $this;
-    }
 
 }

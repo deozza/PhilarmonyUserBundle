@@ -29,8 +29,6 @@ class ApiToken
      */
     private $user;
 
-
-
     public function __construct(User $user, $token)
     {
         $this->user = $user;

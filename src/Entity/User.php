@@ -7,7 +7,6 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
-
 /**
  * @ORM\Entity(repositoryClass="Deozza\PhilarmonyUserBundle\Repository\UserRepository")
  * @UniqueEntity("email")
