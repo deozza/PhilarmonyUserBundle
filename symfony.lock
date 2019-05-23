@@ -1,4 +1,7 @@
 {
+    "deozza/response-maker-bundle": {
+        "version": "1.0.1"
+    },
     "doctrine/annotations": {
         "version": "1.0",
         "recipe": {
@@ -137,6 +140,12 @@
             "version": "3.0",
             "ref": "384cec52df45f3bfd46a09930d6960a58872b268"
         }
+    },
+    "knplabs/knp-components": {
+        "version": "v1.3.10"
+    },
+    "knplabs/knp-paginator-bundle": {
+        "version": "v3.0.0"
     },
     "ocramius/package-versions": {
         "version": "1.4.0"

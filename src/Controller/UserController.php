@@ -7,6 +7,7 @@ use Deozza\PhilarmonyUserBundle\Form\PatchCurrentUserType;
 use Deozza\PhilarmonyUserBundle\Form\PatchUserType;
 use Deozza\PhilarmonyUserBundle\Form\RegistrationType;
 use Deozza\PhilarmonyUserBundle\Repository\UserRepository;
+use Deozza\PhilarmonyUserBundle\Service\UserProfileLoader;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -24,12 +25,13 @@ use Deozza\ResponseMakerBundle\Service\FormErrorSerializer;
 class UserController extends AbstractController
 {
 
-    public function __construct(ResponseMaker $responseMaker, EntityManagerInterface $entityManager, PaginatorInterface $paginator, FormErrorSerializer $serializer)
+    public function __construct(ResponseMaker $responseMaker, EntityManagerInterface $entityManager, PaginatorInterface $paginator, FormErrorSerializer $serializer, UserProfileLoader $profileLoader)
     {
         $this->em = $entityManager;
         $this->paginator = $paginator;
         $this->response = $responseMaker;
         $this->serializer = $serializer;
+        $this->profileLoader = $profileLoader;
     }
 
     /**
@@ -106,6 +108,7 @@ class UserController extends AbstractController
         $user->setRegisterDate(new \DateTime('now'));
 
         $this->em->persist($user);
+        $this->em->flush();
 
         return $this->response->created($user, ['user_basic']);
     }
@@ -116,11 +119,17 @@ class UserController extends AbstractController
     public function patchCurrentAction(Request $request, UserPasswordEncoderInterface $encoder)
     {
         $user = $this->getUser();
-        $patchType = new \ReflectionClass(PatchCurrentUserType::class);
-        $patchedUser = $this->processForm->process($request, $patchType->getName(), $user);
-        if(!is_a($patchedUser, User::class))
+        $form = $this->createForm(PatchCurrentUserType::class, $user);
+
+
+
+
+        $patchedContent = json_decode($request->getContent(), true);
+
+        $form->submit($patchedContent);
+        if(!$form->isValid())
         {
-            return $patchedUser;
+            return $this->response->badRequest($this->serializer->convertFormToArray($form));
         }
 
         $passwordIsValid = $encoder->isPasswordValid($patchedUser, $patchedUser->getPlainPassword());
@@ -153,7 +162,6 @@ class UserController extends AbstractController
         {
             return $patchedUser;
         };
-
 
         if($patchedUser->getNewPassword() && $patchedUser->getNewPassword() != $patchedUser->getPlainPassword())
         {

@@ -15,5 +15,10 @@
         </service>
         <service id="Deozza\PhilarmonyUserBundle\Security\ApiKeyUserProvider" alias="philarmony.user_provider" />
 
+        <service class="Deozza\PhilarmonyUserBundle\Service\UserProfileLoader" id="philarmony.user_profile_loader">
+            <argument key="$userProfile"/>
+            <argument key="$path">%kernel.project_dir%</argument>
+        </service>
+        <service id="Deozza\PhilarmonyUserBundle\Service\UserProfileLoader" alias="philarmony.user_profile_loader" />
     </services>
 </container>

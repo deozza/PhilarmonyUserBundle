@@ -22,7 +22,6 @@ class PatchUserType extends AbstractType
                 'second_options' => ['label' => 'Repeat Password']
             ])
             ->add('active')
-            ->add('roles')
         ;
     }
     public function configureOptions(OptionsResolver $resolver)
