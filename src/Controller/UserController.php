@@ -13,8 +13,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Knp\Component\Pager\PaginatorInterface;
-use Deozza\ResponseMaker\Service\ResponseMaker;
-use Deozza\ResponseMaker\Service\FormErrorSerializer;
+use Deozza\ResponseMakerBundle\Service\ResponseMaker;
+use Deozza\ResponseMakerBundle\Service\FormErrorSerializer;
 
 /**
  * User controller.
