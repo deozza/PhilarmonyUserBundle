@@ -23,7 +23,9 @@
         "symfony/translation": "4.2.*",
         "symfony/validator": "4.2.*",
         "symfony/yaml": "4.2.*",
-        "symfony/security-bundle": "4.2.*"
+        "symfony/security-bundle": "4.2.*",
+        "deozza/response-maker-bundle": "^1.0"
+
     },
     "require-dev": {
         "symfony/profiler-pack": "^1.0",

@@ -1,8 +1,8 @@
 <?php
 namespace Deozza\PhilarmonyUserBundle\Controller;
 
-use Deozza\PhilarmonyBundle\Service\FormManager\FormErrorSerializer;
-use Deozza\PhilarmonyBundle\Service\ResponseMaker;
+use Deozza\ResponseMaker\Service\FormErrorSerializer;
+use Deozza\ResponseMaker\Service\ResponseMaker;
 use Deozza\PhilarmonyUserBundle\Form\CredentialsType;
 use Deozza\PhilarmonyUserBundle\Entity\ApiToken;
 use Deozza\PhilarmonyUserBundle\Entity\Credentials;
