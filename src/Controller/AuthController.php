@@ -87,7 +87,7 @@ class AuthController extends AbstractController
         {
             return $this->response->notAuthorized();
         }
-        
+
         $authToken = $tokenRepository->findOneById($id);
         $currentToken = $this->getUser()->getId();
 

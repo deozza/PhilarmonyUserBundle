@@ -3,13 +3,10 @@ namespace Deozza\PhilarmonyUserBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
- * @UniqueEntity("email")
- * @UniqueEntity("username")
  *
  * @ORM\MappedSuperclass
  */

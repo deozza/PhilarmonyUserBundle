@@ -23,6 +23,7 @@ use Deozza\ResponseMakerBundle\Service\FormErrorSerializer;
 class UserController extends AbstractController
 {
     const FORBIDDEN_MESSAGE = "Access to this resource is restricted";
+    const USER_EXIST_MESSAGE = "User already exists. Chose another email or another login";
 
     public function __construct(ResponseMaker $responseMaker, EntityManagerInterface $entityManager, PaginatorInterface $paginator, FormErrorSerializer $serializer, UserSchemaLoader $userSchemaLoader)
     {
@@ -116,10 +117,9 @@ class UserController extends AbstractController
         }
 
         $repository = $this->em->getRepository($this->userEntity);
-        $userAlreadyExist = $this->em->getRepository($repository)->findByUsernameOrEmail($registration->getLogin(), $registration->getEmail());
-
-        if ($userAlreadyExist) {
-            return $this->response->badRequest("User already exists. Chose another email and another login");
+        $userAlreadyExist = $repository->findByUsernameOrEmail($registration->getLogin(), $registration->getEmail());
+        if (count($userAlreadyExist)>=1) {
+            return $this->response->badRequest(self::USER_EXIST_MESSAGE);
         }
 
         $user = new $this->userEntity;
@@ -150,8 +150,7 @@ class UserController extends AbstractController
         $form = $this->createForm(PatchCurrentUserType::class, $user);
 
         $patchedContent = json_decode($request->getContent(), true);
-
-        $form->submit($patchedContent);
+        $form->submit($patchedContent, false);
         if(!$form->isValid())
         {
             return $this->response->badRequest($this->serializer->convertFormToArray($form));
@@ -161,6 +160,12 @@ class UserController extends AbstractController
         if(!$passwordIsValid)
         {
             return $this->response->badRequest("Your password is invalid");
+        }
+
+        $repository = $this->em->getRepository($this->userEntity);
+        $userAlreadyExist = $repository->findByUsernameOrEmail($user->getUsername(), $user->getEmail());
+        if (count($userAlreadyExist)>1) {
+            return $this->response->badRequest(self::USER_EXIST_MESSAGE);
         }
 
         if($user->getNewPassword() && $user->getNewPassword() != $user->getPlainPassword())
@@ -199,6 +204,12 @@ class UserController extends AbstractController
         if(!$form->isValid())
         {
             return $this->response->badRequest($this->serializer->convertFormToArray($form));
+        }
+
+        $repository = $this->em->getRepository($this->userEntity);
+        $userAlreadyExist = $repository->findByUsernameOrEmail($user->getLogin(), $user->getEmail());
+        if (count($userAlreadyExist)>1) {
+            return $this->response->badRequest(self::USER_EXIST_MESSAGE);
         }
 
         if($user->getNewPassword() && $user->getNewPassword() != $user->getPlainPassword())
