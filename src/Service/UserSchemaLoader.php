@@ -1,7 +1,7 @@
 <?php
 namespace Deozza\PhilarmonyUserBundle\Service;
 
-use Deozza\PhilarmonyCoreBundle\Exceptions\FileNotFound;
+use Deozza\PhilarmonyUtils\Exceptions\FileNotFound;
 use Symfony\Component\Yaml\Yaml;
 
 class UserSchemaLoader

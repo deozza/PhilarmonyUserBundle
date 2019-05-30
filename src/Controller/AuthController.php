@@ -29,7 +29,6 @@ class AuthController extends AbstractController
         $this->response = $responseMaker;
         $this->serializer = $serializer;
         $this->userEntity = $userSchemaLoader->loadUserEntityClass();
-        $this->userRepository = $userSchemaLoader->loadUserRepositoryClass();
     }
 
     /**
@@ -45,7 +44,7 @@ class AuthController extends AbstractController
         {
             return $this->response->badRequest($this->serializer->convertFormToArray($form));
         }
-        $repository = new $this->userRepository;
+        $repository = $this->em->getRepository($this->userEntity);
 
         $user = $repository->findByUsernameOrEmail($credentials->getLogin(), $credentials->getLogin());
 
