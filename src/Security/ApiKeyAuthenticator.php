@@ -3,7 +3,7 @@
 namespace Deozza\PhilarmonyUserBundle\Security;
 
 use Deozza\PhilarmonyUserBundle\Entity\ApiToken;
-use Deozza\PhilarmonyUserBundle\Entity\User;
+use Deozza\PhilarmonyUserBundle\Service\UserSchemaLoader;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,8 +20,10 @@ use Symfony\Component\Dotenv\Dotenv;
 class ApiKeyAuthenticator extends AbstractGuardAuthenticator
 {
 
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em, UserSchemaLoader $userSchemaLoader)
     {
+        $this->userEntity = $userSchemaLoader->loadUserEntityClass();
+        $this->userRepository = $userSchemaLoader->loadUserRepositoryClass();
         $this->em = $em;
     }
 
@@ -39,9 +41,10 @@ class ApiKeyAuthenticator extends AbstractGuardAuthenticator
 
     public function getUser($credentials, UserProviderInterface $userProvider)
     {
+        $entity = new $this->userEntity;
         if(empty($credentials))
         {
-            return new User();
+            return $entity;
         }
 
         try
@@ -51,7 +54,7 @@ class ApiKeyAuthenticator extends AbstractGuardAuthenticator
             $secret = getenv("APP_SECRET");
             $data = JWT::decode($credentials, $secret, ["HS256"]);
             $username = $data['username'];
-            $user = $this->em->getRepository(User::class)->findOneByUsername($username);
+            $user = $this->em->getRepository($entity)->findOneByUsername($username);
             if(!$this->em->getRepository(ApiToken::class)->findOneByUser($user))
             {
                 throw new CustomUserMessageAuthenticationException("Invalid token");
@@ -66,9 +69,7 @@ class ApiKeyAuthenticator extends AbstractGuardAuthenticator
         }
         catch(\Exception $e)
         {
-
             $data = $this->em->getRepository(ApiToken::class)->findOneByToken($credentials);
-
             if($data)
             {
 

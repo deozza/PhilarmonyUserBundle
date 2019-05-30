@@ -24,7 +24,7 @@ class ApiToken
     private $token;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Deozza\PhilarmonyUserBundle\Entity\User")
+     * @ORM\ManyToOne(targetEntity="App\Entity\RealUser")
      * @JMS\Exclude
      */
     private $user;

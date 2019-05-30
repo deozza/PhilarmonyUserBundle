@@ -7,18 +7,20 @@
     <services>
         <service class="Deozza\PhilarmonyUserBundle\Security\ApiKeyAuthenticator" id="philarmony.authenticator">
             <bind key="$em" type="service" id="doctrine.orm.entity_manager"/>
+            <bind key="$userSchemaLoader" type="service" id="philarmony.user_schema_loader"/>
         </service>
         <service id="Deozza\PhilarmonyUserBundle\Security\ApiKeyAuthenticator" alias="philarmony.authenticator" />
 
         <service class="Deozza\PhilarmonyUserBundle\Security\ApiKeyUserProvider" id="philarmony.user_provider">
-            <bind key="$userRepository" type="service" id="Deozza\PhilarmonyUserBundle\Repository\UserRepository"/>
+            <bind key="$userSchemaLoader" type="service" id="philarmony.user_schema_loader"/>
+            <bind key="$apiTokenRepository" type="service" id="Deozza\PhilarmonyUserBundle\Repository\ApiTokenRepository"/>
         </service>
         <service id="Deozza\PhilarmonyUserBundle\Security\ApiKeyUserProvider" alias="philarmony.user_provider" />
 
-        <service class="Deozza\PhilarmonyUserBundle\Service\UserProfileLoader" id="philarmony.user_profile_loader">
-            <argument key="$userProfile"/>
+        <service class="Deozza\PhilarmonyUserBundle\Service\UserSchemaLoader" id="philarmony.user_schema_loader">
+            <argument key="$userPath"/>
             <argument key="$path">%kernel.project_dir%</argument>
         </service>
-        <service id="Deozza\PhilarmonyUserBundle\Service\UserProfileLoader" alias="philarmony.user_profile_loader" />
+        <service id="Deozza\PhilarmonyUserBundle\Service\UserSchemaLoader" alias="philarmony.user_schema_loader" />
     </services>
 </container>

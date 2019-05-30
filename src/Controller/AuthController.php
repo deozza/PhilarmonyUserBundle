@@ -1,13 +1,13 @@
 <?php
 namespace Deozza\PhilarmonyUserBundle\Controller;
 
+use Deozza\PhilarmonyUserBundle\Service\UserSchemaLoader;
 use Deozza\ResponseMakerBundle\Service\FormErrorSerializer;
 use Deozza\ResponseMakerBundle\Service\ResponseMaker;
 use Deozza\PhilarmonyUserBundle\Form\CredentialsType;
 use Deozza\PhilarmonyUserBundle\Entity\ApiToken;
 use Deozza\PhilarmonyUserBundle\Entity\Credentials;
 use Deozza\PhilarmonyUserBundle\Repository\ApiTokenRepository;
-use Deozza\PhilarmonyUserBundle\Repository\UserRepository;
 use Firebase\JWT\JWT;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Dotenv\Dotenv;
@@ -23,17 +23,19 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
  */
 class AuthController extends AbstractController
 {
-    public function __construct(EntityManagerInterface $em, ResponseMaker $responseMaker, FormErrorSerializer $serializer)
+    public function __construct(EntityManagerInterface $em, ResponseMaker $responseMaker, FormErrorSerializer $serializer, UserSchemaLoader $userSchemaLoader)
     {
         $this->em = $em;
         $this->response = $responseMaker;
         $this->serializer = $serializer;
+        $this->userEntity = $userSchemaLoader->loadUserEntityClass();
+        $this->userRepository = $userSchemaLoader->loadUserRepositoryClass();
     }
 
     /**
      * @Route("auth-tokens", name="post_auth_token", methods={"POST"})
      */
-    public function postTokenAction(Request $request, UserRepository $userRepository, UserPasswordEncoderInterface $encoder)
+    public function postTokenAction(Request $request, UserPasswordEncoderInterface $encoder)
     {
         $credentials = new Credentials();
         $form = $this->createForm(CredentialsType::class, $credentials);
@@ -43,8 +45,9 @@ class AuthController extends AbstractController
         {
             return $this->response->badRequest($this->serializer->convertFormToArray($form));
         }
+        $repository = new $this->userRepository;
 
-        $user = $userRepository->findByUsernameOrEmail($credentials->getLogin(), $credentials->getLogin());
+        $user = $repository->findByUsernameOrEmail($credentials->getLogin(), $credentials->getLogin());
 
         if(empty($user) || $user->getActive() == false)
         {

@@ -2,12 +2,10 @@
 namespace Deozza\PhilarmonyUserBundle\Controller;
 
 use Deozza\PhilarmonyUserBundle\Entity\Registration;
-use Deozza\PhilarmonyUserBundle\Entity\User;
 use Deozza\PhilarmonyUserBundle\Form\PatchCurrentUserType;
 use Deozza\PhilarmonyUserBundle\Form\PatchUserType;
 use Deozza\PhilarmonyUserBundle\Form\RegistrationType;
-use Deozza\PhilarmonyUserBundle\Repository\UserRepository;
-use Deozza\PhilarmonyUserBundle\Service\UserProfileLoader;
+use Deozza\PhilarmonyUserBundle\Service\UserSchemaLoader;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -25,25 +23,28 @@ use Deozza\ResponseMakerBundle\Service\FormErrorSerializer;
 class UserController extends AbstractController
 {
 
-    public function __construct(ResponseMaker $responseMaker, EntityManagerInterface $entityManager, PaginatorInterface $paginator, FormErrorSerializer $serializer, UserProfileLoader $profileLoader)
+    public function __construct(ResponseMaker $responseMaker, EntityManagerInterface $entityManager, PaginatorInterface $paginator, FormErrorSerializer $serializer, UserSchemaLoader $userSchemaLoader)
     {
         $this->em = $entityManager;
         $this->paginator = $paginator;
         $this->response = $responseMaker;
         $this->serializer = $serializer;
-        $this->profileLoader = $profileLoader;
+        $this->userEntity = $userSchemaLoader->loadUserEntityClass();
+        $this->userRepository = $userSchemaLoader->loadUserRepositoryClass();
+
     }
 
     /**
      * @Route("users", name="get_users", methods={"GET"})
      */
-    public function getUsersAction(Request $request, UserRepository $userRepository)
+    public function getUsersAction(Request $request)
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'Forbidden access');
 
         $filters = $request->query->get("filterBy", []);
+        $repository = new $this->userRepository;
 
-        $usersQuery = $userRepository->findAllFiltered($filters);
+        $usersQuery = $repository->findAllFiltered($filters);
 
         $users = $this->paginator->paginate(
             $usersQuery,
@@ -65,11 +66,12 @@ class UserController extends AbstractController
     /**
      * @Route("user/{id}", name="get_specific_user", methods={"GET"})
      */
-    public function getSpecificUserAction(UserRepository $userRepository, $id)
+    public function getSpecificUserAction($id)
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'Forbidden access');
 
-        $user = $userRepository->find($id);
+        $repository = new $this->userRepository;
+        $user = $repository->find($id);
         if(empty($user))
         {
             return $this->response->notFound("User with id %s not found", $id);
@@ -93,13 +95,14 @@ class UserController extends AbstractController
             return $this->response->badRequest($this->serializer->convertFormToArray($form));
         }
 
-        $userAlreadyExist = $this->em->getRepository(User::class)->findByUsernameOrEmail($registration->getLogin(), $registration->getEmail());
+        $repository = new $this->userRepository;
+        $userAlreadyExist = $this->em->getRepository($repository)->findByUsernameOrEmail($registration->getLogin(), $registration->getEmail());
 
         if ($userAlreadyExist) {
             return $this->response->badRequest("User already exists. Chose another email and another login");
         }
 
-        $user = new User();
+        $user = new $this->userEntity;
         $user->setUsername($registration->getLogin());
         $user->setEmail($registration->getEmail());
 
@@ -121,8 +124,40 @@ class UserController extends AbstractController
         $user = $this->getUser();
         $form = $this->createForm(PatchCurrentUserType::class, $user);
 
+        $patchedContent = json_decode($request->getContent(), true);
 
+        $form->submit($patchedContent);
+        if(!$form->isValid())
+        {
+            return $this->response->badRequest($this->serializer->convertFormToArray($form));
+        }
 
+        $passwordIsValid = $encoder->isPasswordValid($user, $user->getPlainPassword());
+        if(!$passwordIsValid)
+        {
+            return $this->response->badRequest("Your password is invalid");
+        }
+
+        if($user->getNewPassword() && $user->getNewPassword() != $user->getPlainPassword())
+        {
+            $user->setPassword($encoder->encodePassword($user, $user->getNewPassword()));
+        }
+
+        $this->em->persist($user);
+        $this->em->flush();
+        return $this->response->ok($user, ['user_basic']);
+    }
+
+    /**
+     * @Route("user/{id}", name="patch_specific_user", methods={"PATCH"})
+     */
+    public function patchSpecificUserAction(Request $request, UserPasswordEncoderInterface $encoder, $id)
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'Forbidden access');
+        $repository = new $this->userRepository;
+        $user = $repository->find($id);
+
+        $form = $this->createForm(PatchUserType::class, $user);
 
         $patchedContent = json_decode($request->getContent(), true);
 
@@ -132,44 +167,13 @@ class UserController extends AbstractController
             return $this->response->badRequest($this->serializer->convertFormToArray($form));
         }
 
-        $passwordIsValid = $encoder->isPasswordValid($patchedUser, $patchedUser->getPlainPassword());
-        if(!$passwordIsValid)
+        if($user->getNewPassword() && $user->getNewPassword() != $user->getPlainPassword())
         {
-            return $this->response->badRequest("Your password is invalid");
+            $user->setPassword($encoder->encodePassword($user, $user->getNewPassword()));
         }
 
-        if($patchedUser->getNewPassword() && $patchedUser->getNewPassword() != $patchedUser->getPlainPassword())
-        {
-            $patchedUser->setPassword($encoder->encodePassword($patchedUser, $patchedUser->getNewPassword()));
-        }
-
-        $this->em->persist($patchedUser);
+        $this->em->persist($user);
         $this->em->flush();
-        return $this->response->ok($patchedUser, ['user_basic']);
-    }
-
-    /**
-     * @Route("user/{id}", name="patch_specific_user", methods={"PATCH"})
-     */
-    public function patchSpecificUserAction(Request $request, UserPasswordEncoderInterface $encoder, $id)
-    {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'Forbidden access');
-        $user = $this->em->getRepository(User::class)->find($id);
-        $patchType = new \ReflectionClass(PatchUserType::class);
-        $patchedUser = $this->processForm->process($request, $patchType->getName(), $user);
-
-        if(!is_a($patchedUser, User::class))
-        {
-            return $patchedUser;
-        };
-
-        if($patchedUser->getNewPassword() && $patchedUser->getNewPassword() != $patchedUser->getPlainPassword())
-        {
-            $patchedUser->setPassword($encoder->encodePassword($patchedUser, $patchedUser->getNewPassword()));
-        }
-
-        $this->em->persist($patchedUser);
-        $this->em->flush();
-        return $this->response->ok($patchedUser, ['user_basic','user_advanced']);
+        return $this->response->ok($user, ['user_basic','user_advanced']);
     }
 }

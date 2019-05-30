@@ -17,8 +17,8 @@ class DeozzaPhilarmonyUserExtension extends Extension
         $configuration = $this->getConfiguration($configs, $container);
         $config = $this->processConfiguration($configuration, $configs);
 
-        $definition = $container->getDefinition('philarmony.user_profile_loader');
-        $definition->setArgument(0, $config['user']['profile']);
+        $definition = $container->getDefinition('philarmony.user_schema_loader');
+        $definition->setArgument(0, $config['user']['config']);
     }
 
     public function getAlias()

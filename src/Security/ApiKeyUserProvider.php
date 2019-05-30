@@ -1,30 +1,30 @@
 <?php
 namespace Deozza\PhilarmonyUserBundle\Security;
 
-use Deozza\PhilarmonyUserBundle\Entity\User;
-use Deozza\PhilarmonyUserBundle\Repository\UserRepository;
+use Deozza\PhilarmonyUserBundle\Repository\ApiTokenRepository;
+use Deozza\PhilarmonyUserBundle\Service\UserSchemaLoader;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class ApiKeyUserProvider implements UserProviderInterface
 {
-    protected $tokenValueRepository;
-    protected $userRepository;
-
-    public function __construct(UserRepository $userRepository)
+    public function __construct(UserSchemaLoader $userSchemaLoader, ApiTokenRepository $apiTokenRepository)
     {
-        $this->userRepository = $userRepository;
+        $this->userEntity = $userSchemaLoader->loadUserEntityClass();
+        $this->userRepository = $userSchemaLoader->loadUserRepositoryClass();
+        $this->apiTokenRepository = $apiTokenRepository;
     }
 
     public function getAuthToken($authTokenHeader)
     {
-        return $this->tokenValueRepository->findOneByValue($authTokenHeader);
+        return $this->apiTokenRepository->findOneByValue($authTokenHeader);
     }
 
     public function loadUserByUsername($username)
     {
-        return $this->userRepository->findByUsername($username);
+        $repository = new $this->userRepository;
+        return $repository->findByUsername($username);
     }
 
     public function refreshUser(UserInterface $user)
@@ -34,6 +34,7 @@ class ApiKeyUserProvider implements UserProviderInterface
 
     public function supportsClass($class)
     {
-        return User::class === $class;
+        $entity = new $this->userEntity;
+        return $entity === $class;
     }
 }

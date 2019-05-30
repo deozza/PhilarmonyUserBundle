@@ -8,19 +8,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
- * @ORM\Entity(repositoryClass="Deozza\PhilarmonyUserBundle\Repository\UserRepository")
  * @UniqueEntity("email")
  * @UniqueEntity("username")
+ *
+ * @ORM\MappedSuperclass
  */
-class User implements UserInterface
+
+abstract class User implements UserInterface
 {
-    /**
-     * @ORM\Id()
-     * @ORM\GeneratedValue()
-     * @ORM\Column(type="integer")
-     * @JMS\Groups({"user_id", "entity_complete"})
-     */
-    private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -96,12 +91,6 @@ class User implements UserInterface
     {
         $this->active = false;
         $this->registerDate = new \DateTime('now');
-    }
-
-
-    public function getId(): ?int
-    {
-        return $this->id;
     }
 
     public function getUsername(): ?string
