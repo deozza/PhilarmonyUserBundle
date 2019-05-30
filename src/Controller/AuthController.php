@@ -83,6 +83,11 @@ class AuthController extends AbstractController
      */
     public function deleteCurrentTokenAction(ApiTokenRepository $tokenRepository, $id)
     {
+        if(empty($this->getUser()->getId()))
+        {
+            return $this->response->notAuthorized();
+        }
+        
         $authToken = $tokenRepository->findOneById($id);
         $currentToken = $this->getUser()->getId();
 
