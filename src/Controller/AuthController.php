@@ -33,7 +33,7 @@ class AuthController extends AbstractController
     }
 
     /**
-     * @Route("auth-tokens", name="post_auth_token", methods={"POST"})
+     * @Route("tokens", name="post_auth_token", methods={"POST"})
      */
     public function postTokenAction(Request $request, UserPasswordEncoderInterface $encoder)
     {
@@ -80,7 +80,7 @@ class AuthController extends AbstractController
     }
 
     /**
-     * @Route("auth-token/{id}", name="delete_auth_token", methods={"DELETE"})
+     * @Route("token/{id}", name="delete_auth_token", methods={"DELETE"})
      */
     public function deleteCurrentTokenAction(ApiTokenRepository $tokenRepository, $id)
     {

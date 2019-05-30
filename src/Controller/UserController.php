@@ -22,6 +22,7 @@ use Deozza\ResponseMakerBundle\Service\FormErrorSerializer;
  */
 class UserController extends AbstractController
 {
+    const FORBIDDEN_MESSAGE = "Access to this resource is restricted";
 
     public function __construct(ResponseMaker $responseMaker, EntityManagerInterface $entityManager, PaginatorInterface $paginator, FormErrorSerializer $serializer, UserSchemaLoader $userSchemaLoader)
     {
@@ -30,8 +31,6 @@ class UserController extends AbstractController
         $this->response = $responseMaker;
         $this->serializer = $serializer;
         $this->userEntity = $userSchemaLoader->loadUserEntityClass();
-        $this->userRepository = $userSchemaLoader->loadUserRepositoryClass();
-
     }
 
     /**
@@ -39,10 +38,18 @@ class UserController extends AbstractController
      */
     public function getUsersAction(Request $request)
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'Forbidden access');
+        if(empty($this->getUser()->getId()))
+        {
+            return $this->response->notAuthorized();
+        }
+
+        if(!in_array("ROLE_ADMIN", $this->getUser()->getRoles()))
+        {
+            return $this->response->forbiddenAccess(self::FORBIDDEN_MESSAGE);
+        }
 
         $filters = $request->query->get("filterBy", []);
-        $repository = new $this->userRepository;
+        $repository = $this->em->getRepository($this->userEntity);
 
         $usersQuery = $repository->findAllFiltered($filters);
 
@@ -60,6 +67,11 @@ class UserController extends AbstractController
      */
     public function getCurrentUserAction()
     {
+        if(empty($this->getUser()->getId()))
+        {
+            return $this->response->notAuthorized();
+        }
+
         return $this->response->ok($this->getUser(), ['user_basic']);
     }
 
@@ -68,9 +80,17 @@ class UserController extends AbstractController
      */
     public function getSpecificUserAction($id)
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'Forbidden access');
+        if(empty($this->getUser()->getId()))
+        {
+            return $this->response->notAuthorized();
+        }
 
-        $repository = new $this->userRepository;
+        if(!in_array("ROLE_ADMIN", $this->getUser()->getRoles()))
+        {
+            return $this->response->forbiddenAccess(self::FORBIDDEN_MESSAGE);
+        }
+
+        $repository = $this->em->getRepository($this->userEntity);
         $user = $repository->find($id);
         if(empty($user))
         {
@@ -95,7 +115,7 @@ class UserController extends AbstractController
             return $this->response->badRequest($this->serializer->convertFormToArray($form));
         }
 
-        $repository = new $this->userRepository;
+        $repository = $this->em->getRepository($this->userEntity);
         $userAlreadyExist = $this->em->getRepository($repository)->findByUsernameOrEmail($registration->getLogin(), $registration->getEmail());
 
         if ($userAlreadyExist) {
@@ -122,6 +142,11 @@ class UserController extends AbstractController
     public function patchCurrentAction(Request $request, UserPasswordEncoderInterface $encoder)
     {
         $user = $this->getUser();
+        if(empty($user->getId()))
+        {
+            return $this->response->notAuthorized();
+        }
+
         $form = $this->createForm(PatchCurrentUserType::class, $user);
 
         $patchedContent = json_decode($request->getContent(), true);
@@ -153,8 +178,17 @@ class UserController extends AbstractController
      */
     public function patchSpecificUserAction(Request $request, UserPasswordEncoderInterface $encoder, $id)
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'Forbidden access');
-        $repository = new $this->userRepository;
+        if(empty($this->getUser()->getId()))
+        {
+            return $this->response->notAuthorized();
+        }
+
+        if(!in_array("ROLE_ADMIN", $this->getUser()->getRoles()))
+        {
+            return $this->response->forbiddenAccess(self::FORBIDDEN_MESSAGE);
+        }
+
+        $repository = $this->em->getRepository($this->userEntity);
         $user = $repository->find($id);
 
         $form = $this->createForm(PatchUserType::class, $user);

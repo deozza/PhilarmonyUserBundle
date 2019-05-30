@@ -8,9 +8,9 @@ use Symfony\Bridge\Doctrine\RegistryInterface;
 
 abstract class UserRepository extends ServiceEntityRepository
 {
-    public function __construct(RegistryInterface $registry)
+    public function __construct(RegistryInterface $registry, $class)
     {
-        parent::__construct($registry, User::class);
+        parent::__construct($registry, $class);
     }
     public function findByUsernameOrEmail($username, $email)
     {
@@ -27,6 +27,7 @@ abstract class UserRepository extends ServiceEntityRepository
 
         return $queryBuilder->getQuery()->getOneOrNullResult();
     }
+
 
     public function findAllFiltered(Array $filters)
     {
@@ -54,4 +55,5 @@ abstract class UserRepository extends ServiceEntityRepository
 
         return $queryBuilder->getQuery();
     }
+
 }
