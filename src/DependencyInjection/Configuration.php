@@ -15,13 +15,9 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-                ->arrayNode('user')
-                    ->children()
-                        ->scalarNode('config')
-                            ->isRequired()
-                            ->treatNullLike("/var/Philarmony/user")
-                        ->end()
-                    ->end()
+                ->scalarNode('config')
+                    ->isRequired()
+                    ->treatNullLike("/var/Philarmony/user")
                 ->end()
             ->end()
         ;

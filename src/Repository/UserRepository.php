@@ -25,7 +25,7 @@ abstract class UserRepository extends ServiceEntityRepository
             ->orWhere('u.email = :email')
             ->setParameters($parameters);
 
-        return $queryBuilder->getQuery()->getArrayResult();
+        return $queryBuilder->getQuery()->getResult();
     }
 
 

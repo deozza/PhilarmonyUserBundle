@@ -48,10 +48,11 @@ class AuthController extends AbstractController
 
         $user = $repository->findByUsernameOrEmail($credentials->getLogin(), $credentials->getLogin());
 
-        if(empty($user) || $user->getActive() == false)
+        if(empty($user) || $user[0]->getActive() == false)
         {
             return $this->response->badRequest("Invalid credentials");
         }
+        $user = $user[0];
 
         $isPasswordValid= $encoder->isPasswordValid($user, $credentials->getPassword());
 

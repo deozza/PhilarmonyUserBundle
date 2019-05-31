@@ -24,7 +24,7 @@ class UserController extends AbstractController
 {
     const FORBIDDEN_MESSAGE = "Access to this resource is restricted";
     const USER_EXIST_MESSAGE = "User already exists. Chose another email or another login";
-
+    const DEFAULT_ROLES = ["ROLE_ADMIN"];
     public function __construct(ResponseMaker $responseMaker, EntityManagerInterface $entityManager, PaginatorInterface $paginator, FormErrorSerializer $serializer, UserSchemaLoader $userSchemaLoader)
     {
         $this->em = $entityManager;
@@ -32,6 +32,7 @@ class UserController extends AbstractController
         $this->response = $responseMaker;
         $this->serializer = $serializer;
         $this->userEntity = $userSchemaLoader->loadUserEntityClass();
+        $this->userSchemaLoader = $userSchemaLoader;
     }
 
     /**
@@ -196,18 +197,19 @@ class UserController extends AbstractController
         $repository = $this->em->getRepository($this->userEntity);
         $user = $repository->find($id);
 
-        $form = $this->createForm(PatchUserType::class, $user);
+        $availableRoles = $this->userSchemaLoader()['user']['roles'];
+        $form = $this->createForm(PatchUserType::class, $user, ["availableRoles" => array_unique(array_merge(self::DEFAULT_ROLES, $availableRoles))]);
 
         $patchedContent = json_decode($request->getContent(), true);
 
-        $form->submit($patchedContent);
+        $form->submit($patchedContent, false);
         if(!$form->isValid())
         {
             return $this->response->badRequest($this->serializer->convertFormToArray($form));
         }
 
         $repository = $this->em->getRepository($this->userEntity);
-        $userAlreadyExist = $repository->findByUsernameOrEmail($user->getLogin(), $user->getEmail());
+        $userAlreadyExist = $repository->findByUsernameOrEmail($user->getUsername(), $user->getEmail());
         if (count($userAlreadyExist)>1) {
             return $this->response->badRequest(self::USER_EXIST_MESSAGE);
         }
