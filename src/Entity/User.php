@@ -5,15 +5,23 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 /**
  *
  * @ORM\MappedSuperclass
+ * @ORM\HasLifecycleCallbacks()
  */
 
 abstract class User implements UserInterface
 {
-
+    /**
+     * @ORM\Column(type="uuid", unique=true)
+     * @JMS\Accessor(getter="getUuidAsString")
+     * @JMS\Groups({"user_id", "entity_complete"})
+     */
+    protected $uuid;
     /**
      * @ORM\Column(type="string", length=255)
      * @Assert\NotBlank()
@@ -88,6 +96,32 @@ abstract class User implements UserInterface
     {
         $this->active = false;
         $this->registerDate = new \DateTime('now');
+    }
+
+    /**
+     * @ORM\PrePersist
+     */
+    public function setupUuid()
+    {
+        $this->setUuid(Uuid::uuid4());
+        return $this;
+    }
+
+    public function setUuid($uuid)
+    {
+        $this->uuid = $uuid;
+
+        return $this;
+    }
+
+    public function getUuid()
+    {
+        return $this->uuid;
+    }
+
+    public function getUuidAsString()
+    {
+        return $this->uuid->toString();
     }
 
     public function getUsername(): ?string

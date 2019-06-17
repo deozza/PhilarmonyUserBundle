@@ -93,7 +93,7 @@ class UserController extends AbstractController
         }
 
         $repository = $this->em->getRepository($this->userEntity);
-        $user = $repository->find($id);
+        $user = $repository->findByUuid($id);
         if(empty($user))
         {
             return $this->response->notFound("User with id %s not found", $id);
@@ -108,9 +108,8 @@ class UserController extends AbstractController
     public function postUsersAction(Request $request, UserPasswordEncoderInterface $encoder)
     {
         $registration = new Registration();
-        $form = $this->createForm(RegistrationType::class, $registration);
+        $form = $this->buildUserForm($this->createForm(RegistrationType::class, $registration));
         $postedRegistration = json_decode($request->getContent(), true);
-
         $form->submit($postedRegistration);
         if(!$form->isValid())
         {
@@ -122,7 +121,6 @@ class UserController extends AbstractController
         if (count($userAlreadyExist)>=1) {
             return $this->response->badRequest(self::USER_EXIST_MESSAGE);
         }
-
         $user = new $this->userEntity;
         $user->setUsername($registration->getLogin());
         $user->setEmail($registration->getEmail());
@@ -143,12 +141,12 @@ class UserController extends AbstractController
     public function patchCurrentAction(Request $request, UserPasswordEncoderInterface $encoder)
     {
         $user = $this->getUser();
-        if(empty($user->getId()))
+        if(empty($user->getUuId()))
         {
             return $this->response->notAuthorized();
         }
 
-        $form = $this->createForm(PatchCurrentUserType::class, $user);
+        $form = $this->buildUserForm($this->createForm(PatchCurrentUserType::class, $user));
 
         $patchedContent = json_decode($request->getContent(), true);
         $form->submit($patchedContent, false);
@@ -184,7 +182,7 @@ class UserController extends AbstractController
      */
     public function patchSpecificUserAction(Request $request, UserPasswordEncoderInterface $encoder, $id)
     {
-        if(empty($this->getUser()->getId()))
+        if(empty($this->getUser()->getUuId()))
         {
             return $this->response->notAuthorized();
         }
@@ -199,6 +197,7 @@ class UserController extends AbstractController
 
         $availableRoles = $this->userSchemaLoader()['user']['roles'];
         $form = $this->createForm(PatchUserType::class, $user, ["availableRoles" => array_unique(array_merge(self::DEFAULT_ROLES, $availableRoles))]);
+        $form = $this->buildUserForm($form, $user);
 
         $patchedContent = json_decode($request->getContent(), true);
 
@@ -222,5 +221,16 @@ class UserController extends AbstractController
         $this->em->persist($user);
         $this->em->flush();
         return $this->response->ok($user, ['user_basic','user_advanced']);
+    }
+
+    private function buildUserForm($form)
+    {
+        $user = new \ReflectionClass($this->userEntity);
+        $properties = $user->getProperties();
+        foreach($properties as $property)
+        {
+            if($property->getName() != "id") $form->add($property->getName(),null, ['mapped' => false]);
+        }
+        return $form;
     }
 }
