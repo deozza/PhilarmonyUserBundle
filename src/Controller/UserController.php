@@ -229,7 +229,7 @@ class UserController extends AbstractController
         $properties = $user->getProperties();
         foreach($properties as $property)
         {
-            if($property->getName() != "id") $form->add($property->getName(),null, ['mapped' => false]);
+            if($property->getName() != "id" && $property->getName() != "uuid") $form->add($property->getName(),null, ['mapped' => false]);
         }
         return $form;
     }
