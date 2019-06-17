@@ -5,6 +5,7 @@ use Deozza\PhilarmonyUserBundle\Entity\Registration;
 use Deozza\PhilarmonyUserBundle\Form\PatchCurrentUserType;
 use Deozza\PhilarmonyUserBundle\Form\PatchUserType;
 use Deozza\PhilarmonyUserBundle\Form\RegistrationType;
+use Deozza\PhilarmonyUserBundle\Service\ProcessUserForm;
 use Deozza\PhilarmonyUserBundle\Service\UserSchemaLoader;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,14 +26,17 @@ class UserController extends AbstractController
     const FORBIDDEN_MESSAGE = "Access to this resource is restricted";
     const USER_EXIST_MESSAGE = "User already exists. Chose another email or another login";
     const DEFAULT_ROLES = ["ROLE_ADMIN"];
-    public function __construct(ResponseMaker $responseMaker, EntityManagerInterface $entityManager, PaginatorInterface $paginator, FormErrorSerializer $serializer, UserSchemaLoader $userSchemaLoader)
+
+    private $customUserProperties = [];
+
+    public function __construct(ResponseMaker $responseMaker, EntityManagerInterface $entityManager, PaginatorInterface $paginator, FormErrorSerializer $serializer, UserSchemaLoader $userSchemaLoader, ProcessUserForm $processUserForm)
     {
         $this->em = $entityManager;
         $this->paginator = $paginator;
         $this->response = $responseMaker;
         $this->serializer = $serializer;
         $this->userEntity = $userSchemaLoader->loadUserEntityClass();
-        $this->userSchemaLoader = $userSchemaLoader;
+        $this->processUserForm = $processUserForm;
     }
 
     /**
@@ -108,8 +112,12 @@ class UserController extends AbstractController
     public function postUsersAction(Request $request, UserPasswordEncoderInterface $encoder)
     {
         $registration = new Registration();
-        $form = $this->buildUserForm($this->createForm(RegistrationType::class, $registration));
+        $form = $this->createForm(RegistrationType::class, $registration);
+        $buildForm = $this->processUserForm->buildUserForm($registration, $this->userEntity, $form);
+        $form = $buildForm["form"];
+
         $postedRegistration = json_decode($request->getContent(), true);
+
         $form->submit($postedRegistration);
         if(!$form->isValid())
         {
@@ -129,6 +137,8 @@ class UserController extends AbstractController
         $user->setPassword($password);
         $user->setRegisterDate(new \DateTime('now'));
 
+        $user = $this->processUserForm->saveUserForm($registration, $user);
+
         $this->em->persist($user);
         $this->em->flush();
 
@@ -146,7 +156,9 @@ class UserController extends AbstractController
             return $this->response->notAuthorized();
         }
 
-        $form = $this->buildUserForm($this->createForm(PatchCurrentUserType::class, $user));
+        $form = $this->createForm(PatchCurrentUserType::class, $user);
+        $buildForm = $this->processUserForm->buildUserForm($user, $this->userEntity, $form);
+        $form = $buildForm["form"];
 
         $patchedContent = json_decode($request->getContent(), true);
         $form->submit($patchedContent, false);
@@ -171,7 +183,6 @@ class UserController extends AbstractController
         {
             $user->setPassword($encoder->encodePassword($user, $user->getNewPassword()));
         }
-
         $this->em->persist($user);
         $this->em->flush();
         return $this->response->ok($user, ['user_basic']);
@@ -197,7 +208,8 @@ class UserController extends AbstractController
 
         $availableRoles = $this->userSchemaLoader()['user']['roles'];
         $form = $this->createForm(PatchUserType::class, $user, ["availableRoles" => array_unique(array_merge(self::DEFAULT_ROLES, $availableRoles))]);
-        $form = $this->buildUserForm($form, $user);
+        $buildForm = $this->processUserForm->buildUserForm($user, $this->user, $form);
+        $form = $buildForm["form"];
 
         $patchedContent = json_decode($request->getContent(), true);
 
@@ -221,16 +233,5 @@ class UserController extends AbstractController
         $this->em->persist($user);
         $this->em->flush();
         return $this->response->ok($user, ['user_basic','user_advanced']);
-    }
-
-    private function buildUserForm($form)
-    {
-        $user = new \ReflectionClass($this->userEntity);
-        $properties = $user->getProperties();
-        foreach($properties as $property)
-        {
-            if($property->getName() != "id" && $property->getName() != "uuid") $form->add($property->getName(),null, ['mapped' => false]);
-        }
-        return $form;
     }
 }

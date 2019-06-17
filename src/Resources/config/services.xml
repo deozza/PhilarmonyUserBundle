@@ -22,5 +22,10 @@
             <argument key="$path">%kernel.project_dir%</argument>
         </service>
         <service id="Deozza\PhilarmonyUserBundle\Service\UserSchemaLoader" alias="philarmony.user_schema_loader" />
+
+        <service class="Deozza\PhilarmonyUserBundle\Service\ProcessUserForm" id="philarmony.process_user_form">
+            <bind key="$formFactory" type="service" id="form.factory"/>
+        </service>
+        <service id="Deozza\PhilarmonyUserBundle\Service\ProcessUserForm" alias="philarmony.process_user_form" />
     </services>
 </container>
