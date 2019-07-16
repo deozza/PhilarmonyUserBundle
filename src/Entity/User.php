@@ -27,25 +27,25 @@ abstract class User implements UserInterface
      * @Assert\NotBlank()
      * @JMS\Groups({"user_basic", "username", "entity_complete"})
      */
-    private $username;
+    protected $username;
 
     /**
      * @Assert\Type("string")
      * @JMS\Exclude
      */
-    private $plainPassword;
+    protected $plainPassword;
 
     /**
      * @Assert\Type("string")
      * @JMS\Exclude
      */
-    private $newPassword;
+    protected $newPassword;
 
     /**
      * @ORM\Column(type="string", length=255)
      * @JMS\Exclude
      */
-    private $password;
+    protected $password;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -55,38 +55,38 @@ abstract class User implements UserInterface
      * )
      * @JMS\Groups({"user_basic"})
      */
-    private $email;
+    protected $email;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
      * @JMS\Groups({"user_advanced"})
      */
-    private $lastLogin;
+    protected $lastLogin;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
      * @JMS\Groups({"user_advanced"})
      */
-    private $lastFailedLogin;
+    protected $lastFailedLogin;
 
     /**
      * @ORM\Column(type="datetime")
      * @JMS\Groups({"user_advanced"})
      */
-    private $registerDate;
+    protected $registerDate;
 
     /**
      * @ORM\Column(type="boolean")
      * @JMS\Groups({"user_advanced"})
      */
-    private $active;
+    protected $active;
 
 
     /**
      * @ORM\Column(type="json")
      * @JMS\Groups({"user_advanced"})
      */
-    private $roles = [];
+    protected $roles = [];
 
 
     /**
